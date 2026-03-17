@@ -5,12 +5,27 @@ import mammoth from "mammoth";
 const app = express();
 app.use(express.json());
 
+app.get("/", (req, res) => {
+  res.send("SharePoint Extractor activo 🚀");
+});
+
 app.post("/extract-text", async (req, res) => {
   try {
     const { driveId, itemId } = req.body;
 
-    // Aquí recibirás el token desde la acción
+    if (!driveId || !itemId) {
+      return res.status(400).json({
+        error: "driveId e itemId son requeridos"
+      });
+    }
+
     const token = req.headers.authorization;
+
+    if (!token) {
+      return res.status(401).json({
+        error: "Falta Authorization header"
+      });
+    }
 
     // Descargar archivo desde Microsoft Graph
     const fileResponse = await axios.get(
@@ -33,10 +48,16 @@ app.post("/extract-text", async (req, res) => {
     });
 
   } catch (error) {
+    console.error("Error:", error.response?.data || error.message);
+
     res.status(500).json({
       error: "Error extrayendo texto"
     });
   }
 });
 
-app.listen(process.env.PORT || 3000);
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Servidor corriendo en puerto ${PORT}`);
+});
